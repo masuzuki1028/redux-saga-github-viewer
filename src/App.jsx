@@ -20,7 +20,7 @@ function App() {
   const modal = useSelector((state) => state.modal);
 
   return (
-    <BrowserRouter basename="/redux-github-viewer">
+    <BrowserRouter basename="/redux-saga-github-viewer">
       <GlobalStyle />
       <Header />
       <SContent>
@@ -31,9 +31,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </SContent>
-      <Modal isOpen={modal.show} >
-        {modal.content}
-      </Modal>
+      <Modal isOpen={modal.show}>{modal.content}</Modal>
     </BrowserRouter>
   );
 }

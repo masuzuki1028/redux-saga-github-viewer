@@ -11,14 +11,10 @@ const SContainer = styled.tr`
   }
 `;
 
-const Status = {
-  0: "open",
-  1: "close",
-};
-
 export const IssueItem = ({ item, onClickCheckBox, checked, onRowClick }) => {
-  const status = Status[item.status];
-  const now = dayjs().format("MM-DD-YYYY");
+  const dayFormat = (date) => {
+    return dayjs(date).format("MM-DD-YYYY");
+  };
 
   return (
     <SContainer key={item.id}>
@@ -30,10 +26,10 @@ export const IssueItem = ({ item, onClickCheckBox, checked, onRowClick }) => {
         ></input>
       </td>
       <td onClick={onRowClick}>{item.title}</td>
-      <td onClick={onRowClick}>{status}</td>
-      <td onClick={onRowClick}></td>
-      <td onClick={onRowClick}>{now}</td>
-      <td onClick={onRowClick}>{now}</td>
+      <td onClick={onRowClick}>{item.state}</td>
+      <td onClick={onRowClick}>{item.author_association}</td>
+      <td onClick={onRowClick}>{dayFormat(item.created_at)}</td>
+      <td onClick={onRowClick}>{dayFormat(item.updated_at)}</td>
     </SContainer>
   );
 };

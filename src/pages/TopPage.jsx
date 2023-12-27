@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { IssueTemplete } from "../components/template/IssueTemplate";
 import { PullRequestTemplate } from "../components/template/PullRequestTemplate";
 import { TabHeader } from "../components/organism/TabHeader";
+// import { UserApi } from "../components/api/UserApi";
 
 const Tabs = [
   {

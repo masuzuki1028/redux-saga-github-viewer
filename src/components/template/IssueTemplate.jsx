@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Button } from "../atoms/Button";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { deleteIssue } from "../../store/IssueReducer";
 import { open } from "../../store/ModalReducer";
 import { IssueItem } from "../organism/IssueItem";
 import { IssueForm } from "../organism/IssueForm";
 import { TextField } from "../atoms/TextField";
+import axios from "axios";
 
 const SContainer = styled.div`
   padding: 16px;
@@ -61,15 +62,39 @@ const STable = styled.table`
 `;
 
 export const IssueTemplete = () => {
-  const data = useSelector((state) => state.issues);
+  // const data = useSelector((state) => state.issues);
   const dispatch = useDispatch();
-
+  const [issues, setIssues] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchTitle, setSearchTitle] = useState("");
 
-  const filteredIssues = Object.values(data).filter((item) => {
+  const filteredIssues = Object.values(issues).filter((item) => {
     return item.title.toLowerCase().includes(searchTitle.toLowerCase());
   });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_PUBLIC_URL}/issues?state=all`,
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.REACT_APP_GITHUB_API_TOKEN}`,
+            },
+          }
+        );
+        setIssues(
+          response.data.sort(function (first, second) {
+            return first.number - second.number;
+          })
+        );
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const openModal = () => {
     dispatch(open(<IssueForm />));
@@ -90,7 +115,7 @@ export const IssueTemplete = () => {
   };
 
   const onRowClick = (id) => {
-    dispatch(open(<IssueForm id={id}/>));
+    dispatch(open(<IssueForm id={id} />));
   };
 
   return (
@@ -126,24 +151,14 @@ export const IssueTemplete = () => {
             </tr>
           </thead>
           <tbody>
-            {/* {Object.values(data).length > 0 ? (
-              Object.values(data).map((item) => (
-                <IssueItem
-                  key={item.id}
-                  item={item}
-                  onClickCheckBox={() => onClickCheckBox(item.id)}
-                  checked={selectedIds.includes(item.id)}
-                  onRowClick={() => onRowClick(item.id)}
-                />
-              )) */}
             {filteredIssues.length > 0 ? (
               filteredIssues.map((item) => (
                 <IssueItem
-                  key={item.id}
+                  key={item.number}
                   item={item}
-                  onClickCheckBox={() => onClickCheckBox(item.id)}
-                  checked={selectedIds.includes(item.id)}
-                  onRowClick={() => onRowClick(item.id)}
+                  onClickCheckBox={() => onClickCheckBox(item.number)}
+                  checked={selectedIds.includes(item.number)}
+                  onRowClick={() => onRowClick(item.number)}
                 />
               ))
             ) : (

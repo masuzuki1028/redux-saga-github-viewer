@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { upsertIssue } from "../../store/IssueReducer";
+import { useDispatch } from "react-redux";
+// import { upsertIssue } from "../../store/IssueReducer";
 import PropTypes from "prop-types";
 import { hide } from "../../store/ModalReducer";
 import styled from "styled-components";
 import { Button } from "../atoms/Button";
 import { TextField } from "../atoms/TextField";
 import { TextArea } from "../atoms/TextArea";
+import axios from "axios";
+import { upsertIssue } from "../../store/IssueReducer";
+// import { create } from "domain";
 
 const SContainer = styled.div`
   max-width: 598px;
@@ -56,24 +59,66 @@ const SFooter = styled.div`
 `;
 
 export const IssueForm = (props) => {
-  const { id } = props || {}
-  const issue = useSelector((state) => state.issues[id]);
-  const isEdit = !!issue
+  const { id } = props || {};
+  const [issue, setIssue] = useState([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_PUBLIC_URL}/issues/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.REACT_APP_GITHUB_API_TOKEN}`,
+            },
+          }
+        );
+        setIssue(response.data);
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  const createIssue = async () => {
+    const issueData = {
+      title: title,
+      body: description,
+    };
+    console.log("issueData: ", issueData);
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_PUBLIC_URL}/issues`,
+        issueData,
+        {
+          headers: {
+            Authorization: `${process.env.REACT_APP_GITHUB_API_TOKEN}`,
+          },
+        }
+      );
+      console.log("Issue created: ", response.data);
+    } catch (error) {
+      console.error("Error creating issue: ", error);
+    }
+  };
+
+  const isEdit = !!issue.id;
   const [validationError, setValidationError] = useState("");
   const dispatch = useDispatch();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState(0);
+  const [status, setStatus] = useState("0");
 
   useEffect(() => {
     if (isEdit) {
       setTitle(issue.title);
-      setDescription(issue.description);
-      setStatus(issue.status);
+      setDescription(issue.body);
+      setStatus(issue.state === "open" ? 0 : 1);
       setValidationError("");
     }
-  }, []);
+  }, [issue, isEdit]);
 
   const onSubmit = () => {
     if (!title) {
@@ -86,6 +131,7 @@ export const IssueForm = (props) => {
       return;
     }
 
+    createIssue();
     dispatch(upsertIssue({ id, title, description, status }));
     dispatch(hide());
   };
@@ -116,19 +162,25 @@ export const IssueForm = (props) => {
         </SField>
       </SForm>
       {isEdit ? (
-        <SField>
-          <SLabel>ステータス</SLabel>
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value={0}>Open</option>
-            <option value={1}>Close</option>
-          </select>
-        </SField>
+        <SForm>
+          <SField>
+            <SLabel>ステータス</SLabel>
+            <select value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value={0}>Open</option>
+              <option value={1}>Close</option>
+            </select>
+          </SField>
+        </SForm>
       ) : null}
       <SErrorMessageContainer>
         {validationError && <SErrorMessage>{validationError}</SErrorMessage>}
       </SErrorMessageContainer>
       <SFooter>
-        <Button variant="new" onClick={onSubmit} text={ isEdit ? "更新" : "作成" } />
+        <Button
+          variant="new"
+          onClick={onSubmit}
+          text={isEdit ? "更新" : "作成"}
+        />
         <Button onClick={onClose} text="閉じる" />
       </SFooter>
     </SContainer>
